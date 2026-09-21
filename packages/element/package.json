@@ -1,0 +1,20 @@
+{
+  "name": "@dotmap/element",
+  "version": "0.1.0",
+  "description": "Drop-in <dot-map> web component for any website",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@dotmap/core": "0.1.0",
+    "@dotmap/theme": "0.1.0",
+    "@dotmap/world": "0.1.0"
+  }
+}

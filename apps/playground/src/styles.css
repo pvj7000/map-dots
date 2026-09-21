@@ -1,0 +1,288 @@
+:root {
+  color-scheme: light;
+  --bg: #efe8db;
+  --bg-accent: #e4d9c6;
+  --ink: #1b1915;
+  --muted: #6d675c;
+  --panel: #fffaf1;
+  --line: rgba(27, 25, 21, 0.12);
+  --land: #8d8679;
+  --btn: #1b1915;
+  --btn-ink: #fffaf1;
+  --shadow: 0 24px 60px rgba(60, 42, 20, 0.08);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1218;
+  --bg-accent: #151c24;
+  --ink: #e8eef4;
+  --muted: #93a0ae;
+  --panel: #121922;
+  --line: rgba(232, 238, 244, 0.1);
+  --land: #64748b;
+  --btn: #e8eef4;
+  --btn-ink: #0d1218;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, var(--bg-accent), transparent 50%),
+    var(--bg);
+  color: var(--ink);
+  font-family: Manrope, "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 28px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.topbar,
+.stage__footer,
+.layout,
+.choice-grid {
+  display: flex;
+}
+
+.topbar {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.eyebrow a {
+  color: inherit;
+}
+
+h1,
+h2 {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(32px, 4vw, 48px);
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.layout {
+  align-items: start;
+  gap: 20px;
+}
+
+.stage {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.sidebar {
+  width: min(360px, 100%);
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.stage {
+  padding: 18px 18px 10px;
+}
+
+.controls,
+.code-card {
+  padding: 18px;
+}
+
+.stage__map {
+  min-width: 0;
+}
+
+.stage__footer {
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 8px 12px;
+  flex-wrap: wrap;
+}
+
+.stats {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.btn,
+.choice,
+select,
+input[type="range"] {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.btn,
+.choice {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--btn);
+  color: var(--btn-ink);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chip {
+  box-sizing: border-box;
+  max-width: 100%;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chip.is-on {
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.subhead {
+  margin-top: 22px;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.choice span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.choice.is-on {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  min-width: 0;
+}
+
+.field span {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.code-card pre {
+  margin: 0;
+  overflow: auto;
+  max-width: 100%;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+@media (max-width: 980px) {
+  .layout,
+  .topbar {
+    display: grid;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .app {
+    padding: 16px;
+  }
+}
+

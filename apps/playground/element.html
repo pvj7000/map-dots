@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DotMap — web component</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      dot-map {
+        --dotmap-hover-scale: 1.75;
+        --dotmap-pin-hover-scale: 2;
+        --dotmap-hover-duration: 140ms;
+      }
+      body {
+        margin: 0;
+        padding: 28px;
+        background: #efe8db;
+        color: #1b1915;
+        font-family: Manrope, system-ui, sans-serif;
+      }
+      h1 {
+        margin: 0 0 8px;
+        letter-spacing: -0.04em;
+      }
+      p {
+        margin: 0 0 20px;
+        color: #6d675c;
+      }
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <p><a href="/">← React playground</a></p>
+    <h1>Any website</h1>
+    <p>Same engine, CSS variables, <code>&lt;dot-map hover-mode="country"&gt;</code></p>
+    <dot-map
+      grid="diagonal"
+      projection="robinson"
+      theme="paper"
+      hover-mode="country"
+      spacing="11"
+      width="1100"
+      height="540"
+    ></dot-map>
+    <script type="module" src="/src/element-demo.ts"></script>
+  </body>
+</html>

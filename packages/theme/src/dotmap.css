@@ -1,0 +1,215 @@
+.dotmap[data-theme="ink"],
+:host([theme="ink"]) {
+  --dotmap-land: #2a2622;
+  --dotmap-ink: #111111;
+  --dotmap-muted: #5c574f;
+  --dotmap-pin-stroke: #f6f1e8;
+  --dotmap-label-color: #111111;
+  --dotmap-label-halo: #f6f1e8;
+  --dotmap-connector-opacity: 0.75;
+  --dotmap-filter-dim: 0.18;
+  --dotmap-hover-scale: 1.6;
+  --dotmap-pin-hover-scale: 1.9;
+  --dotmap-enter-duration: 480ms;
+}
+
+.dotmap[data-theme="midnight"],
+:host([theme="midnight"]) {
+  --dotmap-land: #64748b;
+  --dotmap-ink: #e8eef4;
+  --dotmap-muted: #93a0ae;
+  --dotmap-pin-stroke: #121922;
+  --dotmap-label-color: #e8eef4;
+  --dotmap-label-halo: #121922;
+  --dotmap-filter-dim: 0.18;
+}
+
+.dotmap,
+:host {
+  --dotmap-bg: transparent;
+  --dotmap-land: #8d8679;
+  --dotmap-ocean: transparent;
+  --dotmap-ink: #1b1915;
+  --dotmap-muted: #6d675c;
+  --dotmap-font: Manrope, "IBM Plex Sans", system-ui, sans-serif;
+  --dotmap-dot-size: 2.15;
+  --dotmap-pin-size: 3.8;
+  --dotmap-pin-stroke: var(--dotmap-label-halo);
+  --dotmap-pin-stroke-width: 1.6;
+  --dotmap-label-color: #1b1915;
+  --dotmap-label-size: 12px;
+  --dotmap-label-weight: 650;
+  --dotmap-label-halo: #fffaf1;
+  --dotmap-connector: currentColor;
+  --dotmap-connector-width: 1;
+  --dotmap-connector-opacity: 0.7;
+  --dotmap-filter-dim: 0.2;
+  --dotmap-hover-scale: 1.55;
+  --dotmap-hover-opacity: 1;
+  --dotmap-hover-fill: var(--dotmap-dot-fill, var(--dotmap-land));
+  --dotmap-pin-hover-scale: 1.85;
+  --dotmap-hover-duration: 160ms;
+  --dotmap-enter-duration: 520ms;
+  --dotmap-dot-fill: var(--dotmap-land);
+}
+
+.dotmap {
+  width: 100%;
+  height: auto;
+  display: block;
+  color: var(--dotmap-land);
+  overflow: visible;
+  background: var(--dotmap-bg);
+  font-family: var(--dotmap-font);
+}
+
+.dotmap__dot {
+  fill: var(--dotmap-dot-fill, var(--dotmap-land));
+  transform-box: fill-box;
+  transform-origin: center;
+  cursor: pointer;
+  transition:
+    transform var(--dotmap-hover-duration) ease,
+    opacity var(--dotmap-hover-duration) ease,
+    fill var(--dotmap-hover-duration) ease;
+  animation: dotmap-rise var(--dotmap-enter-duration) ease backwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.dotmap__dot.is-ocean {
+  fill: var(--dotmap-ocean);
+}
+
+.dotmap__dot.is-pin {
+  stroke: var(--dotmap-pin-stroke);
+  stroke-width: var(--dotmap-pin-stroke-width);
+}
+
+.dotmap:not([data-hover="none"]) .dotmap__dot:hover,
+.dotmap__dot.is-hover {
+  transform: scale(var(--dotmap-hover-scale));
+  opacity: var(--dotmap-hover-opacity);
+  fill: var(--dotmap-hover-fill);
+}
+
+.dotmap:not([data-hover="none"]) .dotmap__dot.is-pin:hover,
+.dotmap__dot.is-pin.is-hover {
+  transform: scale(var(--dotmap-pin-hover-scale));
+}
+
+.dotmap[data-hover="none"] .dotmap__dot,
+.dotmap[data-hover="none"] .dotmap__pin-hit {
+  cursor: default;
+}
+
+.dotmap.is-filtering .dotmap__dot:not(.is-active),
+.dotmap.is-hovering .dotmap__dot:not(.is-hover):not(.is-related):not(.is-active) {
+  opacity: var(--dotmap-filter-dim);
+}
+
+.dotmap__label {
+  color: var(--dotmap-label-color);
+  pointer-events: none;
+}
+
+.dotmap__label.is-hover,
+.dotmap__label.is-related {
+  opacity: 1;
+}
+
+.dotmap.is-hovering .dotmap__label:not(.is-hover):not(.is-related) {
+  opacity: 0.28;
+}
+
+.dotmap__label text {
+  fill: var(--dotmap-label-color);
+  font-family: var(--dotmap-font);
+  font-size: var(--dotmap-label-size);
+  font-weight: var(--dotmap-label-weight);
+  letter-spacing: 0.01em;
+  paint-order: stroke fill;
+  stroke: var(--dotmap-label-halo);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.dotmap__connector {
+  stroke: var(--dotmap-connector);
+  stroke-width: var(--dotmap-connector-width);
+  opacity: var(--dotmap-connector-opacity);
+}
+
+.dotmap__pin-hit {
+  cursor: pointer;
+}
+
+.dotmap-legend {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--dotmap-font);
+}
+
+.dotmap-legend__item {
+  box-sizing: border-box;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--dotmap-ink) 12%, transparent);
+  background: transparent;
+  color: var(--dotmap-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dotmap-legend__item.is-active,
+.dotmap-legend__item:hover {
+  background: color-mix(in srgb, var(--dotmap-ink) 6%, transparent);
+}
+
+.dotmap-legend__swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  flex: 0 0 auto;
+}
+
+.dotmap-legend__copy {
+  display: grid;
+  gap: 1px;
+}
+
+.dotmap-legend__label {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.dotmap-legend__meta {
+  display: none;
+  color: var(--dotmap-muted);
+}
+
+@keyframes dotmap-rise {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dotmap__dot {
+    animation: none;
+    transition: none;
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@dotmap/theme",
+  "version": "0.1.0",
+  "description": "CSS variables, presets, and hover styles for DotMap",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": [
+    "./src/dotmap.css"
+  ],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./dotmap.css": "./src/dotmap.css"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "vitest": "^3.2.4"
+  }
+}

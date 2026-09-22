@@ -202,6 +202,19 @@ Pins outside that frame are dropped automatically. You can still pass `countries
 | `diagonal` | Staggered rows (the usual corporate dotted map) |
 | `hex` | Same stagger with true hex vertical spacing |
 
+## Playground builder
+
+The playground is also a no-code configuration builder. Its **Locations** panel lets you:
+
+- search a city or address (OpenStreetMap via Photon) and fill its coordinates
+- enter latitude and longitude manually when search is not enough
+- edit or remove existing pins
+- choose a group, custom pin color, and label anchor
+- select a location to isolate it on the map
+- copy or download the result as JSON, React, or custom-element HTML
+
+Run `npm run dev`, then open `http://localhost:5173`.
+
 ## What V1 does not do
 
 No deep zoom, no pan, no street-level tiles. This is a country / continent visualization, not a Mapbox replacement.

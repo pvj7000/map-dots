@@ -1,3 +1,5 @@
+/// <reference path="./d3-geo-projection.d.ts" />
+
 import {
   geoEqualEarth,
   geoEquirectangular,

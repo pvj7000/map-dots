@@ -183,7 +183,8 @@ function createEngine(state: EngineState): DotMap {
     const owned = country ? state.byCountry.get(country.iso) : undefined;
 
     if (landOnly && owned && owned.length > 0) {
-      return snapFromDot(nearestDot(owned, projected.x, projected.y), projected);
+      const nearest = nearestDot(owned, projected.x, projected.y);
+      return nearest ? snapFromDot(nearest, projected) : null;
     }
 
     const approx = nearestCell(state.layout, projected.x, projected.y);

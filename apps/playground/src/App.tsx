@@ -1,8 +1,16 @@
-import { createMap, type GridTopology, type HoverMode, type ProjectionName } from "@dotmap/core";
+import {
+  createMap,
+  type GridTopology,
+  type HoverMode,
+  type PinInput,
+  type ProjectionName,
+} from "@dotmap/core";
 import { DotMap, Legend } from "@dotmap/react";
 import type { ThemePreset } from "@dotmap/theme";
 import world from "@dotmap/world";
 import { useEffect, useMemo, useState } from "react";
+import { ExportCard } from "./ExportCard";
+import { LocationEditor } from "./LocationEditor";
 import {
   type ColorMode,
   type ScopeId,
@@ -11,9 +19,8 @@ import {
   grids,
   groupsForTheme,
   hoverModes,
-  pins,
+  pins as initialPins,
   projections,
-  sampleSource,
   scopes,
   themes,
   viewOptions,
@@ -29,7 +36,22 @@ export function App() {
   const [colorMode, setColorMode] = useState<ColorMode>("presence");
   const [hoverGroup, setHoverGroup] = useState<string | null>(null);
   const [lockedGroup, setLockedGroup] = useState<string | null>(null);
-  const groups = groupsForTheme(theme, scope === "world" ? colorMode : "presence");
+  const [locations, setLocations] = useState<PinInput[]>(() => initialPins.map((pin) => ({ ...pin })));
+  const [previewLocation, setPreviewLocation] = useState<PinInput | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const locationGroups = groupsForTheme(theme, "presence");
+  const mapGroups = groupsForTheme(theme, scope === "world" ? colorMode : "presence");
+  const groups =
+    scope === "world" && colorMode === "continents"
+      ? [...mapGroups, ...locationGroups]
+      : mapGroups;
+  const displayedLocations = previewLocation
+    ? [...locations.filter((pin) => pin.id !== previewLocation.id), previewLocation]
+    : locations;
+  const coloring =
+    scope === "world" && colorMode === "continents"
+      ? { continentGroups: continentGroupMap, countryGroups: { RUS: "asia" } }
+      : { continentGroups: {}, countryGroups };
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme === "midnight" ? "dark" : "light";
@@ -38,9 +60,11 @@ export function App() {
   useEffect(() => {
     setHoverGroup(null);
     setLockedGroup(null);
+    setSelectedLocation(null);
+    setPreviewLocation(null);
   }, [scope, colorMode]);
 
-  const { snapshot, vienna, elapsed } = useMemo(() => {
+  const { snapshot, elapsed } = useMemo(() => {
     const started = performance.now();
     const map = createMap({
       geojson: world,
@@ -52,26 +76,17 @@ export function App() {
       padding: 28,
       ...viewOptions(scope),
     });
-    const coloring =
-      scope === "world" && colorMode === "continents"
-        ? { continentGroups: continentGroupMap, countryGroups: { RUS: "asia" } }
-        : { countryGroups };
-    const mappedPins =
-      scope === "world" && colorMode === "continents"
-        ? pins.map((pin) => ({ ...pin, group: undefined }))
-        : pins;
     const next = map.compute({
-      pins: mappedPins,
+      pins: displayedLocations,
       groups,
       ...coloring,
       labels: { connector: "elbow", fontSize: 12, gap: 20 },
     });
     return {
       snapshot: next,
-      vienna: map.latLngToGrid(48.2082, 16.3738),
       elapsed: Math.round(performance.now() - started),
     };
-  }, [grid, projection, spacing, groups, scope, colorMode]);
+  }, [grid, projection, spacing, groups, scope, colorMode, displayedLocations]);
 
   const activeGroup = hoverGroup ?? lockedGroup;
   const land = snapshot.landDots.length;
@@ -107,7 +122,13 @@ export function App() {
               snapshot={snapshot}
               theme={theme}
               hoverMode={hoverMode}
-              highlight={activeGroup ? { group: activeGroup } : null}
+              highlight={
+                selectedLocation
+                  ? { pin: selectedLocation }
+                  : activeGroup
+                    ? { group: activeGroup }
+                    : null
+              }
             />
           </div>
           <div className="stage__footer">
@@ -115,17 +136,31 @@ export function App() {
               items={snapshot.legend}
               activeId={lockedGroup}
               onHover={setHoverGroup}
-              onSelect={setLockedGroup}
+              onSelect={(id) => {
+                setSelectedLocation(null);
+                setLockedGroup(id);
+              }}
             />
             <p className="stats">
               {land.toLocaleString("en-US")} land dots · {snapshot.pins.length}{" "}
               {snapshot.pins.length === 1 ? "pin" : "pins"} · {elapsed} ms
-              {scope === "world" && vienna ? ` · Wien → ${vienna.country}` : ""}
             </p>
           </div>
         </section>
 
         <aside className="sidebar">
+          <LocationEditor
+            locations={locations}
+            groups={locationGroups}
+            selectedId={selectedLocation}
+            onChange={setLocations}
+            onPreview={setPreviewLocation}
+            onSelect={(id) => {
+              setSelectedLocation(id);
+              setLockedGroup(null);
+            }}
+          />
+
           <section className="card controls">
             <h2>Hover</h2>
             <div className="choice-grid">
@@ -204,12 +239,18 @@ export function App() {
             </label>
           </section>
 
-          <section className="card code-card">
-            <h2>Drop-in</h2>
-            <pre>
-              <code>{sampleSource(grid, projection, scope, theme, hoverMode)}</code>
-            </pre>
-          </section>
+          <ExportCard
+            pins={locations}
+            groups={groups}
+            countryGroups={coloring.countryGroups}
+            continentGroups={coloring.continentGroups}
+            grid={grid}
+            projection={projection}
+            spacing={spacing}
+            scope={scope}
+            theme={theme}
+            hoverMode={hoverMode}
+          />
         </aside>
       </main>
     </div>

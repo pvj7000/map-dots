@@ -62,7 +62,7 @@ export function createMap(options: MapOptions): DotMap {
 
   const width = options.width ?? 960;
   const height = options.height ?? Math.round(width * 0.5);
-  const spacing = options.spacing ?? 12;
+  const spacing = options.spacing ?? 8;
   const padding = options.padding ?? 36;
   const grid = options.grid ?? "diagonal";
   const includeOcean = options.includeOcean ?? false;

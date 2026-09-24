@@ -1,16 +1,14 @@
 .dotmap[data-theme="ink"],
 :host([theme="ink"]) {
-  --dotmap-land: #2a2622;
-  --dotmap-ink: #111111;
-  --dotmap-muted: #5c574f;
-  --dotmap-pin-stroke: #f6f1e8;
-  --dotmap-label-color: #111111;
-  --dotmap-label-halo: #f6f1e8;
-  --dotmap-connector-opacity: 0.75;
-  --dotmap-filter-dim: 0.18;
-  --dotmap-hover-scale: 1.6;
-  --dotmap-pin-hover-scale: 1.9;
-  --dotmap-enter-duration: 480ms;
+  --dotmap-bg: #f7f6f3;
+  --dotmap-land: #141210;
+  --dotmap-ink: #141210;
+  --dotmap-muted: #5c5852;
+  --dotmap-pin-stroke: #f7f6f3;
+  --dotmap-label-color: #141210;
+  --dotmap-label-halo: #f7f6f3;
+  --dotmap-connector-opacity: 0.9;
+  --dotmap-filter-dim: 0.14;
 }
 
 .dotmap[data-theme="midnight"],

@@ -12,6 +12,20 @@
   --shadow: 0 24px 60px rgba(60, 42, 20, 0.08);
 }
 
+[data-theme="ink"] {
+  color-scheme: light;
+  --bg: #e6e4de;
+  --bg-accent: #d5d2ca;
+  --ink: #141210;
+  --muted: #5c5852;
+  --panel: #f7f6f3;
+  --line: rgba(20, 18, 16, 0.14);
+  --land: #141210;
+  --btn: #141210;
+  --btn-ink: #f7f6f3;
+  --shadow: 0 24px 60px rgba(20, 18, 16, 0.08);
+}
+
 [data-theme="dark"] {
   color-scheme: dark;
   --bg: #0d1218;

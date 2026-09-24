@@ -19,6 +19,20 @@ export const groups: GroupDef[] = [
   { id: "targets", label: "Zielländer", color: "#5c6b7a", description: "Active markets" },
 ];
 
+const inkGroups: GroupDef[] = [
+  { id: "teams", label: "Teams", color: "#16324f", description: "Office locations" },
+  { id: "targets", label: "Zielländer", color: "#8f3d2c", description: "Active markets" },
+];
+
+const inkContinents: GroupDef[] = [
+  { id: "europe", label: "Europe", color: "#1e4d7b" },
+  { id: "asia", label: "Asia", color: "#8a5a12" },
+  { id: "africa", label: "Africa", color: "#8f3d2c" },
+  { id: "north-america", label: "North America", color: "#1b4332" },
+  { id: "south-america", label: "South America", color: "#6b2d5b" },
+  { id: "oceania", label: "Oceania", color: "#0f5f63" },
+];
+
 export const continentGroups: GroupDef[] = [
   { id: "europe", label: "Europe", color: "#3d6b8c" },
   { id: "asia", label: "Asia", color: "#c8963e" },
@@ -30,6 +44,7 @@ export const continentGroups: GroupDef[] = [
 
 export function groupsForTheme(theme: ThemePreset, mode: ColorMode): GroupDef[] {
   if (mode === "continents") {
+    if (theme === "ink") return inkContinents;
     if (theme === "midnight") {
       return [
         { id: "europe", label: "Europe", color: "#7dd3fc" },
@@ -48,6 +63,7 @@ export function groupsForTheme(theme: ThemePreset, mode: ColorMode): GroupDef[] 
       { id: "targets", label: "Zielländer", color: "#94a3b8", description: "Active markets" },
     ];
   }
+  if (theme === "ink") return inkGroups;
   return groups;
 }
 

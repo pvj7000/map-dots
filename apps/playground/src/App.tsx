@@ -29,7 +29,7 @@ import {
 export function App() {
   const [grid, setGrid] = useState<GridTopology>("diagonal");
   const [projection, setProjection] = useState<ProjectionName>("robinson");
-  const [spacing, setSpacing] = useState(11);
+  const [spacing, setSpacing] = useState(8);
   const [theme, setTheme] = useState<ThemePreset>("paper");
   const [hoverMode, setHoverMode] = useState<HoverMode>("country");
   const [scope, setScope] = useState<ScopeId>("world");
@@ -54,7 +54,8 @@ export function App() {
       : { continentGroups: {}, countryGroups };
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme === "midnight" ? "dark" : "light";
+    document.documentElement.dataset.theme =
+      theme === "midnight" ? "dark" : theme === "ink" ? "ink" : "light";
   }, [theme]);
 
   useEffect(() => {
@@ -231,7 +232,7 @@ export function App() {
               <span>Spacing · {spacing}px</span>
               <input
                 type="range"
-                min={8}
+                min={6}
                 max={18}
                 value={spacing}
                 onChange={(event) => setSpacing(Number(event.target.value))}

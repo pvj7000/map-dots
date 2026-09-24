@@ -63,7 +63,7 @@ const map = createMap({
   grid: 'diagonal',          // square | diagonal | hex
   projection: 'robinson',    // mercator, equalEarth, naturalEarth, ...
   width: 1100,
-  spacing: 11,
+  spacing: 8,
 });
 
 const vienna = map.latLngToGrid(48.2082, 16.3738);

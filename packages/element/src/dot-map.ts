@@ -195,7 +195,7 @@ export class DotMapElement extends HTMLElement {
       geojson: this.#geojson,
       width: Number(this.getAttribute("width") ?? 1100),
       height: Number(this.getAttribute("height") ?? 540),
-      spacing: Number(this.getAttribute("spacing") ?? 11),
+      spacing: Number(this.getAttribute("spacing") ?? 8),
       padding: Number(this.getAttribute("padding") ?? 28),
       grid: (this.getAttribute("grid") ?? "diagonal") as GridTopology,
       projection: (this.getAttribute("projection") ?? "robinson") as ProjectionName,

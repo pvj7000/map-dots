@@ -4,3 +4,7 @@ dist
 *.log
 .vite
 coverage
+*.tgz
+apps/playground/public/dotmap.js
+test-results
+playwright-report

@@ -1,7 +1,7 @@
 {
   "name": "@dotmap/core",
   "version": "0.1.0",
-  "description": "Headless dotted-map engine: GeoJSON → grid, pins, labels, legend",
+  "description": "Headless dotted-map engine: GeoJSON \u2192 grid, pins, labels, legend",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
@@ -28,5 +28,6 @@
     "tsx": "^4.20.5",
     "typescript": "^5.8.2",
     "vitest": "^3.2.4"
-  }
+  },
+  "private": true
 }

@@ -1,5 +1,8 @@
 import {
   createMap,
+  clusterPins,
+  pinClusterSegments,
+  pinDescription,
   hasHighlight,
   hexPath,
   highlightFromHover,
@@ -15,8 +18,22 @@ import {
   type MapSnapshot,
   type PlacedPin,
 } from "@dotmap/core";
-import { resolveTheme, themePresetName, themeToCssVars, type DotMapTheme, type ThemePreset } from "@dotmap/theme";
-import { type CSSProperties, type PointerEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  resolveTheme,
+  themePresetName,
+  themeToCssVars,
+  type DotMapTheme,
+  type ThemePreset,
+} from "@dotmap/theme";
+import {
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 export interface DotMapProps extends Partial<MapOptions>, ComputeInput {
   snapshot?: MapSnapshot;
@@ -28,18 +45,26 @@ export interface DotMapProps extends Partial<MapOptions>, ComputeInput {
   showOcean?: boolean;
   className?: string;
   style?: CSSProperties;
-  renderDot?: (dot: Dot, context: { isPin: boolean; highlighted: boolean; hover: boolean }) => ReactNode;
+  renderDot?: (
+    dot: Dot,
+    context: { isPin: boolean; highlighted: boolean; hover: boolean },
+  ) => ReactNode;
   renderPin?: (pin: PlacedPin) => ReactNode;
   onPinEnter?: (pin: PlacedPin) => void;
   onPinLeave?: (pin: PlacedPin) => void;
-  onHover?: (highlight: MapHighlight | null, target?: { dot: Dot; pin?: PlacedPin }) => void;
+  onHover?: (
+    highlight: MapHighlight | null,
+    target?: { dot: Dot; pin?: PlacedPin; pins?: PlacedPin[] },
+  ) => void;
 }
 
 export function DotMap(props: DotMapProps) {
   const snapshot = useResolvedSnapshot(props);
   const shape = props.shape ?? "circle";
   const hoverMode = props.hoverMode ?? "country";
-  const highlight: MapHighlight | null = props.highlight ?? (props.highlightGroup ? { group: props.highlightGroup } : null);
+  const highlight: MapHighlight | null =
+    props.highlight ??
+    (props.highlightGroup ? { group: props.highlightGroup } : null);
   const filtering = hasHighlight(highlight);
   const showOcean = props.showOcean ?? false;
   const theme = resolveTheme(props.theme);
@@ -51,17 +76,31 @@ export function DotMap(props: DotMapProps) {
   useEffect(() => {
     setHover(null);
   }, [hoverMode]);
-  const groupColor = new Map(snapshot.legend.map((item) => [item.id, item.color]));
-  const pinsByCell = new Map<string, PlacedPin>(
-    snapshot.pins.map((pin) => [`${pin.snapped.col}:${pin.snapped.row}`, pin]),
+  const groupColor = new Map(
+    snapshot.legend.map((item) => [item.id, item.color]),
   );
-  const dotsById = useMemo(() => new Map(snapshot.dots.map((dot) => [dot.id, dot])), [snapshot.dots]);
+  const clusters = clusterPins(snapshot.pins);
+  const clustersByCell = new Map(
+    clusters.map((cluster) => [cluster.cellId, cluster]),
+  );
+  const pinsByCell = new Map(
+    clusters
+      .filter((cluster) => cluster.pins.length === 1)
+      .map((cluster) => [cluster.cellId, cluster.pins[0]]),
+  );
+  const dotsById = useMemo(
+    () => new Map(snapshot.dots.map((dot) => [dot.id, dot])),
+    [snapshot.dots],
+  );
   const sizes = {
     dot: Number(theme.dotSize ?? 2.15),
     pin: Number(theme.pinSize ?? 3.8),
   };
 
-  const setHoverTarget = (next: MapHighlight | null, target?: { dot: Dot; pin?: PlacedPin }) => {
+  const setHoverTarget = (
+    next: MapHighlight | null,
+    target?: { dot: Dot; pin?: PlacedPin; pins?: PlacedPin[] },
+  ) => {
     setHover(next);
     props.onHover?.(next, target);
   };
@@ -72,13 +111,28 @@ export function DotMap(props: DotMapProps) {
     const id = node.getAttribute("data-id");
     const dot = id ? dotsById.get(id) : undefined;
     if (!dot) return;
-    const pin = pinsByCell.get(dot.id);
-    setHoverTarget(highlightFromHover(hoverModeRef.current, dot, pin), { dot, pin });
+    const pins = clustersByCell.get(dot.id)?.pins ?? [];
+    const pinId = node.getAttribute("data-pin");
+    const pin = pinId
+      ? pins.find((item) => item.id === pinId)
+      : pins.length === 1
+        ? pins[0]
+        : undefined;
+    setHoverTarget(highlightFromHover(hoverModeRef.current, dot, pin, pins), {
+      dot,
+      pin,
+      pins,
+    });
   };
 
   return (
     <svg
-      className={["dotmap", filtering ? "is-filtering" : "", hovering ? "is-hovering" : "", props.className]
+      className={[
+        "dotmap",
+        filtering ? "is-filtering" : "",
+        hovering ? "is-hovering" : "",
+        props.className,
+      ]
         .filter(Boolean)
         .join(" ")}
       data-theme={themePresetName(props.theme)}
@@ -86,7 +140,10 @@ export function DotMap(props: DotMapProps) {
       viewBox={`0 0 ${snapshot.width} ${snapshot.height}`}
       role="img"
       aria-label="Dotted world map"
-      style={{ ...(themeToCssVars(props.theme) as CSSProperties), ...props.style }}
+      style={{
+        ...(themeToCssVars(props.theme) as CSSProperties),
+        ...props.style,
+      }}
       onPointerOver={onPointerOver}
       onPointerLeave={() => setHoverTarget(null)}
     >
@@ -97,11 +154,17 @@ export function DotMap(props: DotMapProps) {
             const pin = pinsByCell.get(dot.id);
             const highlighted = matchHighlight(dot, highlight, pin);
             const related = Boolean(hover && matchHighlight(dot, hover, pin));
-            const exact = Boolean(hover?.cell === dot.id || (pin && hover?.pin === pin.id));
+            const exact = Boolean(
+              hover?.cell === dot.id || (pin && hover?.pin === pin.id),
+            );
             if (props.renderDot) {
               return (
                 <g key={dot.id} className="dotmap__dot-slot" data-id={dot.id}>
-                  {props.renderDot(dot, { isPin: Boolean(pin), highlighted, hover: exact || related })}
+                  {props.renderDot(dot, {
+                    isPin: Boolean(pin),
+                    highlighted,
+                    hover: exact || related,
+                  })}
                 </g>
               );
             }
@@ -115,7 +178,15 @@ export function DotMap(props: DotMapProps) {
                 exact={exact}
                 related={related && !exact}
                 radius={pin ? sizes.pin : sizes.dot}
-                color={pin?.color ?? resolveDotColor(dot, groupColor, "var(--dotmap-land)", Boolean(pin))}
+                color={
+                  pin?.color ??
+                  resolveDotColor(
+                    dot,
+                    groupColor,
+                    "var(--dotmap-land)",
+                    Boolean(pin),
+                  )
+                }
               />
             );
           })}
@@ -125,19 +196,36 @@ export function DotMap(props: DotMapProps) {
           const pin = snapshot.pins.find((item) => item.id === label.pinId);
           const cell = pin ? `${pin.snapped.col}:${pin.snapped.row}` : "";
           const labeled = cell ? dotsById.get(cell) : undefined;
-          const related = Boolean(hover && labeled && matchHighlight(labeled, hover, pin));
-          const exact = Boolean(hover?.cell === cell || hover?.pin === label.pinId);
+          const related = Boolean(
+            hover && labeled && matchHighlight(labeled, hover, pin),
+          );
+          const exact = Boolean(
+            hover?.cell === cell || hover?.pin === label.pinId,
+          );
           return (
             <g
               key={label.pinId}
-              className={["dotmap__label", exact ? "is-hover" : "", related && !exact ? "is-related" : ""]
+              className={[
+                "dotmap__label",
+                exact ? "is-hover" : "",
+                related && !exact ? "is-related" : "",
+              ]
                 .filter(Boolean)
                 .join(" ")}
             >
               {label.connector.points.length >= 2 ? (
-                <path className="dotmap__connector" d={toPath(label.connector.points)} fill="none" />
+                <path
+                  className="dotmap__connector"
+                  d={toPath(label.connector.points)}
+                  fill="none"
+                />
               ) : null}
-              <text x={label.x} y={label.y} textAnchor={label.align} dominantBaseline={label.baseline}>
+              <text
+                x={label.x}
+                y={label.y}
+                textAnchor={label.align}
+                dominantBaseline={label.baseline}
+              >
                 {label.text}
               </text>
             </g>
@@ -145,21 +233,103 @@ export function DotMap(props: DotMapProps) {
         })}
       </g>
       <g className="dotmap__pins">
-        {snapshot.pins.map((pin) => (
-          <g
-            key={pin.id}
-            className="dotmap__pin-hit"
-            data-id={`${pin.snapped.col}:${pin.snapped.row}`}
-            onMouseEnter={() => props.onPinEnter?.(pin)}
-            onMouseLeave={() => props.onPinLeave?.(pin)}
-          >
-            {props.renderPin ? (
-              props.renderPin(pin)
-            ) : (
-              <circle className="dotmap__pin" cx={pin.snapped.x} cy={pin.snapped.y} r={8} fill="transparent" />
-            )}
-          </g>
-        ))}
+        {clusters.map((cluster) => {
+          const dot = dotsById.get(cluster.cellId);
+          const active =
+            filtering &&
+            Boolean(
+              dot &&
+              cluster.pins.some((pin) => matchHighlight(dot, highlight, pin)),
+            );
+          const related = Boolean(
+            dot &&
+            hover &&
+            cluster.pins.some((pin) => matchHighlight(dot, hover, pin)),
+          );
+          const segments = pinClusterSegments(
+            cluster,
+            sizes.pin * 1.8,
+            groupColor,
+            "var(--dotmap-land)",
+          );
+          return (
+            <g
+              key={cluster.cellId}
+              data-id={cluster.cellId}
+              data-pin-count={cluster.pins.length}
+              className={[
+                "dotmap__cluster",
+                active ? "is-active" : "",
+                related ? "is-related" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-label={cluster.pins.map(pinDescription).join("; ")}
+            >
+              <title>{cluster.pins.map(pinDescription).join("\n")}</title>
+              {cluster.pins.map((pin, index) => {
+                const segment =
+                  cluster.pins.length > 1 ? segments[index] : null;
+                return (
+                  <g
+                    key={pin.id}
+                    data-id={cluster.cellId}
+                    data-pin={pin.id}
+                    className="dotmap__pin-hit"
+                    role="img"
+                    tabIndex={0}
+                    aria-label={pinDescription(pin)}
+                    onFocus={() => {
+                      const dot = dotsById.get(cluster.cellId);
+                      if (dot)
+                        setHoverTarget(
+                          highlightFromHover(hoverMode, dot, pin, cluster.pins),
+                          { dot, pin, pins: cluster.pins },
+                        );
+                      props.onPinEnter?.(pin);
+                    }}
+                    onBlur={() => {
+                      setHoverTarget(null);
+                      props.onPinLeave?.(pin);
+                    }}
+                    onMouseEnter={() => props.onPinEnter?.(pin)}
+                    onMouseLeave={() => props.onPinLeave?.(pin)}
+                  >
+                    <title>{pinDescription(pin)}</title>
+                    {props.renderPin ? (
+                      props.renderPin(pin)
+                    ) : segment ? (
+                      <path
+                        className="dotmap__pin-segment"
+                        d={segment.path}
+                        fill={segment.color}
+                      />
+                    ) : (
+                      <circle
+                        className="dotmap__pin"
+                        cx={pin.snapped.x}
+                        cy={pin.snapped.y}
+                        r={8}
+                        fill="transparent"
+                      />
+                    )}
+                  </g>
+                );
+              })}
+              {cluster.pins.length > 1 && (
+                <text
+                  className="dotmap__cluster-count"
+                  x={cluster.x}
+                  y={cluster.y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {cluster.pins.length}
+                </text>
+              )}
+            </g>
+          );
+        })}
       </g>
     </svg>
   );
@@ -206,7 +376,13 @@ function useResolvedSnapshot(props: DotMapProps): MapSnapshot {
       continentGroups: props.continentGroups,
       labels: props.labels,
     }),
-    [props.pins, props.groups, props.countryGroups, props.continentGroups, props.labels],
+    [
+      props.pins,
+      props.groups,
+      props.countryGroups,
+      props.continentGroups,
+      props.labels,
+    ],
   );
 
   const computed = useMemo(() => {
@@ -216,7 +392,9 @@ function useResolvedSnapshot(props: DotMapProps): MapSnapshot {
 
   const snapshot = props.snapshot ?? computed;
   if (!snapshot) {
-    throw new Error("DotMap needs either a snapshot or a geojson FeatureCollection");
+    throw new Error(
+      "DotMap needs either a snapshot or a geojson FeatureCollection",
+    );
   }
   return snapshot;
 }
@@ -302,6 +480,9 @@ function DotShapeNode({
 
 function toPath(points: { x: number; y: number }[]): string {
   return points
-    .map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+    )
     .join(" ");
 }

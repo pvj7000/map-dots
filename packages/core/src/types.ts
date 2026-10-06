@@ -183,6 +183,7 @@ export interface ComputeInput {
 
 export interface MapHighlight {
   group?: string | null;
+  groups?: string[];
   country?: string | null;
   continent?: string | null;
   pin?: string | null;

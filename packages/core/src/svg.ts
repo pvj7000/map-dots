@@ -1,4 +1,15 @@
-import type { Dot, DotShape, LabelPlacement, MapSnapshot, SvgRenderOptions } from "./types.js";
+import {
+  clusterPins,
+  pinClusterSegments,
+  pinDescription,
+} from "./pin-clusters.js";
+import type {
+  Dot,
+  DotShape,
+  LabelPlacement,
+  MapSnapshot,
+  SvgRenderOptions,
+} from "./types.js";
 
 const DEFAULTS: Required<
   Pick<
@@ -31,21 +42,44 @@ const DEFAULTS: Required<
   shape: "circle",
 };
 
-export function renderSVG(snapshot: MapSnapshot, options: SvgRenderOptions = {}): string {
+export function renderSVG(
+  snapshot: MapSnapshot,
+  options: SvgRenderOptions = {},
+): string {
   const style = { ...DEFAULTS, ...options };
-  const groupColor = new Map(snapshot.legend.map((item) => [item.id, item.color]));
-  const pinIds = new Set(snapshot.pins.map((pin) => `${pin.snapped.col}:${pin.snapped.row}`));
-  const visibleDots = snapshot.dots.filter((dot) => dot.land || style.showOcean);
+  const groupColor = new Map(
+    snapshot.legend.map((item) => [item.id, item.color]),
+  );
+  const clusters = clusterPins(snapshot.pins);
+  const singlePins = new Map(
+    clusters
+      .filter((cluster) => cluster.pins.length === 1)
+      .map((cluster) => [cluster.cellId, cluster.pins[0]]),
+  );
+  const visibleDots = snapshot.dots.filter(
+    (dot) => dot.land || style.showOcean,
+  );
 
   const dots = visibleDots
     .map((dot) => {
-      const active = !style.highlightGroup || dot.groups.includes(style.highlightGroup);
+      const active =
+        !style.highlightGroup || dot.groups.includes(style.highlightGroup);
       const dim = style.highlightGroup && !active;
-      const isPin = pinIds.has(dot.id);
-      const color = resolveDotColor(dot, groupColor, style.landColor, isPin);
+      const isPin = singlePins.has(dot.id);
+      const color =
+        singlePins.get(dot.id)?.color ??
+        resolveDotColor(dot, groupColor, style.landColor, isPin);
       const radius = isPin ? style.pinRadius : style.dotRadius;
       const opacity = dim ? 0.22 : dot.land ? 1 : 0.35;
-      return shapeNode(style.shape, dot.x, dot.y, radius, color, opacity, dot.id);
+      return shapeNode(
+        style.shape,
+        dot.x,
+        dot.y,
+        radius,
+        color,
+        opacity,
+        dot.id,
+      );
     })
     .join("\n");
 
@@ -54,10 +88,23 @@ export function renderSVG(snapshot: MapSnapshot, options: SvgRenderOptions = {})
       ? snapshot.labels.map((label) => renderLabel(label, style)).join("\n")
       : "";
 
+  const markers = clusters
+    .filter((cluster) => cluster.pins.length > 1)
+    .map((cluster) => {
+      const segments = pinClusterSegments(
+        cluster,
+        style.pinRadius * 1.8,
+        groupColor,
+        style.landColor,
+      );
+      return `<g data-pin-count="${cluster.pins.length}"><title>${escapeXml(cluster.pins.map(pinDescription).join("\n"))}</title>${segments.map((segment) => `<path data-pin="${escapeAttr(segment.pin.id)}" d="${segment.path}" fill="${escapeAttr(segment.color)}"><title>${escapeXml(pinDescription(segment.pin))}</title></path>`).join("")}<text x="${cluster.x}" y="${cluster.y}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="${escapeAttr(style.labelColor)}" stroke="${escapeAttr(style.background)}" stroke-width="2" paint-order="stroke fill">${cluster.pins.length}</text></g>`;
+    })
+    .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${snapshot.width} ${snapshot.height}" width="${snapshot.width}" height="${snapshot.height}" role="img">
-<rect width="100%" height="100%" fill="${style.background}"/>
+<rect width="100%" height="100%" fill="${escapeAttr(style.background)}"/>
 <g class="dots">${dots}</g>
 <g class="labels">${labels}</g>
+<g class="pins">${markers}</g>
 </svg>`;
 }
 
@@ -84,7 +131,7 @@ export function shapeNode(
   opacity: number,
   id?: string,
 ): string {
-  const common = `fill="${fill}" fill-opacity="${opacity}"${id ? ` data-id="${id}"` : ""}`;
+  const common = `fill="${escapeAttr(fill)}" fill-opacity="${opacity}"${id ? ` data-id="${escapeAttr(id)}"` : ""}`;
   if (shape === "square") {
     const size = radius * 1.8;
     return `<rect x="${(x - size / 2).toFixed(2)}" y="${(y - size / 2).toFixed(2)}" width="${size.toFixed(2)}" height="${size.toFixed(2)}" rx="0.4" ${common}/>`;
@@ -105,19 +152,27 @@ export function hexPath(x: number, y: number, radius: number): string {
 
 function renderLabel(
   label: LabelPlacement,
-  style: Required<Pick<SvgRenderOptions, "labelColor" | "connectorColor" | "fontFamily" | "fontSize">>,
+  style: Required<
+    Pick<
+      SvgRenderOptions,
+      "labelColor" | "connectorColor" | "fontFamily" | "fontSize"
+    >
+  >,
 ): string {
   const points = label.connector.points;
   const connector =
     points.length >= 2
-      ? `<path d="${polyline(points)}" fill="none" stroke="${style.connectorColor}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>`
+      ? `<path d="${polyline(points)}" fill="none" stroke="${escapeAttr(style.connectorColor)}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>`
       : "";
-  return `<g class="label" data-pin="${escapeAttr(label.pinId)}">${connector}<text x="${label.x.toFixed(2)}" y="${label.y.toFixed(2)}" text-anchor="${label.align}" dominant-baseline="${label.baseline}" fill="${style.labelColor}" font-family="${style.fontFamily}" font-size="${style.fontSize}" font-weight="600">${escapeXml(label.text)}</text></g>`;
+  return `<g class="label" data-pin="${escapeAttr(label.pinId)}">${connector}<text x="${label.x.toFixed(2)}" y="${label.y.toFixed(2)}" text-anchor="${label.align}" dominant-baseline="${label.baseline}" fill="${escapeAttr(style.labelColor)}" font-family="${escapeAttr(style.fontFamily)}" font-size="${style.fontSize}" font-weight="600">${escapeXml(label.text)}</text></g>`;
 }
 
 function polyline(points: { x: number; y: number }[]): string {
   return points
-    .map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+    )
     .join(" ");
 }
 
@@ -140,5 +195,7 @@ export function formatMatrix(
   const land = options.land ?? "1";
   const ocean = options.ocean ?? "0";
   const join = options.join ?? "";
-  return matrix.map((row) => row.map((cell) => (cell ? land : ocean)).join(join)).join("\n");
+  return matrix
+    .map((row) => row.map((cell) => (cell ? land : ocean)).join(join))
+    .join("\n");
 }

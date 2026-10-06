@@ -1,0 +1,49 @@
+name: Beta feedback
+description: Tell us how creating and embedding your first DotMap went.
+title: "[Beta feedback]: "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Package version or artifact commit
+      placeholder: 0.1.0-beta.1
+    validations:
+      required: true
+  - type: dropdown
+    id: integration
+    attributes:
+      label: Integration
+      options:
+        - Plain HTML
+        - React
+        - Headless engine
+        - Preset import and reuse
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Did you get the map onto your website?
+      options:
+        - Yes, without help
+        - Yes, with help
+        - No
+    validations:
+      required: true
+  - type: input
+    id: duration
+    attributes:
+      label: Time spent
+      placeholder: 4 minutes
+  - type: textarea
+    id: friction
+    attributes:
+      label: First confusing or blocked step
+      description: What were you trying to do, and what happened?
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Browser, framework, and errors
+      description: Include installation or browser errors if relevant.

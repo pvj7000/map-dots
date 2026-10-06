@@ -139,32 +139,54 @@ export const PRESETS: Record<ThemePreset, Required<DotMapTheme>> = {
   },
 };
 
-export function resolveTheme(theme?: DotMapTheme | ThemePreset | null): DotMapTheme {
+export function resolveTheme(
+  theme?: DotMapTheme | ThemePreset | null,
+): DotMapTheme {
   if (!theme) return { ...PRESETS.paper };
   if (typeof theme === "string") return { ...PRESETS[theme] };
   return { ...PRESETS.paper, ...theme };
 }
 
-export function themePresetName(theme?: DotMapTheme | ThemePreset | null): ThemePreset {
+export function themePresetName(
+  theme?: DotMapTheme | ThemePreset | null,
+): ThemePreset {
   return typeof theme === "string" ? theme : "paper";
 }
 
-export function themeToCssVars(theme?: DotMapTheme | ThemePreset | null): Record<string, string> {
+export function themeToCssVars(
+  theme?: DotMapTheme | ThemePreset | null,
+): Record<string, string> {
   if (!theme || typeof theme === "string") return {};
   const vars: Record<string, string> = {};
-  for (const [key, cssVar] of Object.entries(CSS_VARS) as [ThemeToken, string][]) {
+  for (const [key, cssVar] of Object.entries(CSS_VARS) as [
+    ThemeToken,
+    string,
+  ][]) {
     const value = theme[key];
     if (value) vars[cssVar] = value;
   }
   return vars;
 }
 
-export function applyTheme(element: HTMLElement, theme?: DotMapTheme | ThemePreset | null): void {
+const appliedTokens = new WeakMap<HTMLElement, string[]>();
+
+export function applyTheme(
+  element: HTMLElement,
+  theme?: DotMapTheme | ThemePreset | null,
+): void {
+  for (const name of appliedTokens.get(element) ?? [])
+    element.style.removeProperty(name);
+  appliedTokens.delete(element);
+  const preset = themePresetName(theme);
+  if (element.getAttribute("theme") !== preset)
+    element.setAttribute("theme", preset);
+  if (element.getAttribute("data-theme") !== preset)
+    element.setAttribute("data-theme", preset);
   if (typeof theme === "string") {
-    element.setAttribute("theme", theme);
     return;
   }
   const vars = themeToCssVars(theme);
+  appliedTokens.set(element, Object.keys(vars));
   for (const [name, value] of Object.entries(vars)) {
     element.style.setProperty(name, value);
   }

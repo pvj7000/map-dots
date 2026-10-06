@@ -211,3 +211,16 @@
     transition: none;
   }
 }
+
+.dotmap__pin-segment { stroke: var(--dotmap-pin-stroke); stroke-width: 0.6px; }
+.dotmap__pin-hit:focus { outline: none; }
+.dotmap__pin-hit:focus .dotmap__pin-segment,
+.dotmap__pin-hit:focus .dotmap__pin { stroke: var(--dotmap-ink); stroke-width: 2px; }
+.dotmap__cluster-count {
+  pointer-events: none; font: 700 9px system-ui, sans-serif;
+  fill: var(--dotmap-ink); stroke: var(--dotmap-label-halo);
+  stroke-width: 2px; paint-order: stroke fill;
+}
+
+.dotmap.is-filtering .dotmap__cluster:not(.is-active),
+.dotmap.is-hovering .dotmap__cluster:not(.is-related):not(.is-active) { opacity: var(--dotmap-filter-dim); }

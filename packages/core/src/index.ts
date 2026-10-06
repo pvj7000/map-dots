@@ -1,4 +1,6 @@
 export { createMap, fromJSON, type DotMap } from "./create-map.js";
+export { parsePreset, type MapPreset } from "./preset.js";
+export { clusterPins, pinClusterSegments, pinDescription, type PinCluster } from "./pin-clusters.js";
 export { formatMatrix, hexPath, renderSVG, resolveDotColor, shapeNode } from "./svg.js";
 export { estimateTextWidth, placeLabels } from "./labels.js";
 export {

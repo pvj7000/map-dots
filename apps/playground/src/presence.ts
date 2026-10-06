@@ -16,12 +16,12 @@ export type ColorMode = "presence" | "continents";
 
 export const groups: GroupDef[] = [
   { id: "teams", label: "Teams", color: "#0f766e", description: "Office locations" },
-  { id: "targets", label: "Zielländer", color: "#5c6b7a", description: "Active markets" },
+  { id: "targets", label: "Markets", color: "#5c6b7a", description: "Active markets" },
 ];
 
 const inkGroups: GroupDef[] = [
   { id: "teams", label: "Teams", color: "#16324f", description: "Office locations" },
-  { id: "targets", label: "Zielländer", color: "#8f3d2c", description: "Active markets" },
+  { id: "targets", label: "Markets", color: "#8f3d2c", description: "Active markets" },
 ];
 
 const inkContinents: GroupDef[] = [
@@ -60,7 +60,7 @@ export function groupsForTheme(theme: ThemePreset, mode: ColorMode): GroupDef[] 
   if (theme === "midnight") {
     return [
       { id: "teams", label: "Teams", color: "#2dd4bf", description: "Office locations" },
-      { id: "targets", label: "Zielländer", color: "#94a3b8", description: "Active markets" },
+      { id: "targets", label: "Markets", color: "#94a3b8", description: "Active markets" },
     ];
   }
   if (theme === "ink") return inkGroups;
@@ -68,11 +68,11 @@ export function groupsForTheme(theme: ThemePreset, mode: ColorMode): GroupDef[] 
 }
 
 export const pins: PinInput[] = [
-  { id: "vie", lat: 48.2082, lng: 16.3738, label: "Wien", group: "teams", preferredAnchor: "right" },
+  { id: "vie", lat: 48.2082, lng: 16.3738, label: "Vienna", group: "teams", preferredAnchor: "right" },
   { id: "bog", lat: 4.711, lng: -74.0721, label: "Bogotá", group: "teams", preferredAnchor: "left" },
   { id: "nyc", lat: 40.7128, lng: -74.006, label: "New York", group: "teams", preferredAnchor: "left" },
-  { id: "sin", lat: 1.3521, lng: 103.8198, label: "Singapur", group: "teams", preferredAnchor: "left" },
-  { id: "cpt", lat: -33.9249, lng: 18.4241, label: "Kapstadt", group: "teams", preferredAnchor: "right" },
+  { id: "sin", lat: 1.3521, lng: 103.8198, label: "Singapore", group: "teams", preferredAnchor: "left" },
+  { id: "cpt", lat: -33.9249, lng: 18.4241, label: "Cape Town", group: "teams", preferredAnchor: "right" },
 ];
 
 export const countryGroups: Record<string, string> = {
@@ -124,6 +124,7 @@ export const projections: { id: ProjectionName; label: string }[] = [
   { id: "equirectangular", label: "Equirectangular" },
   { id: "miller", label: "Miller" },
   { id: "mollweide", label: "Mollweide" },
+  { id: "orthographic", label: "Orthographic" },
 ];
 
 export const grids: { id: GridTopology; label: string; hint: string }[] = [

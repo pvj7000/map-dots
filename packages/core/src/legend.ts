@@ -1,5 +1,12 @@
 import { continentKeys, normalizeContinent } from "./continents.js";
-import type { Dot, GroupDef, HoverMode, LegendItem, MapHighlight, PlacedPin } from "./types.js";
+import type {
+  Dot,
+  GroupDef,
+  HoverMode,
+  LegendItem,
+  MapHighlight,
+  PlacedPin,
+} from "./types.js";
 
 export function applyGroups(
   dots: Dot[],
@@ -11,11 +18,17 @@ export function applyGroups(
   const byId = new Map(next.map((dot) => [dot.id, dot]));
 
   for (const dot of next) {
-    for (const group of groupsForKeys(continentGroups, continentKeys(dot.continent))) {
+    for (const group of groupsForKeys(
+      continentGroups,
+      continentKeys(dot.continent),
+    )) {
       pushGroup(dot, group);
     }
     if (dot.country) {
-      for (const group of groupsForKeys(countryGroups, [dot.country, dot.country.toUpperCase()])) {
+      for (const group of groupsForKeys(countryGroups, [
+        dot.country,
+        dot.country.toUpperCase(),
+      ])) {
         pushGroup(dot, group);
       }
     }
@@ -30,11 +43,17 @@ export function applyGroups(
   return next;
 }
 
-export function buildLegend(groups: GroupDef[], dots: Dot[], pins: PlacedPin[]): LegendItem[] {
+export function buildLegend(
+  groups: GroupDef[],
+  dots: Dot[],
+  pins: PlacedPin[],
+): LegendItem[] {
   return groups.map((group) => {
     const groupDots = dots.filter((dot) => dot.groups.includes(group.id));
     const countries = unique(
-      groupDots.map((dot) => dot.country).filter((value): value is string => Boolean(value)),
+      groupDots
+        .map((dot) => dot.country)
+        .filter((value): value is string => Boolean(value)),
     );
     return {
       id: group.id,
@@ -68,7 +87,12 @@ function pushGroup(dot: Dot, group: string): void {
 
 export function hasHighlight(highlight?: MapHighlight | null): boolean {
   return Boolean(
-    highlight?.group || highlight?.country || highlight?.continent || highlight?.pin || highlight?.cell,
+    highlight?.group ||
+    highlight?.groups?.length ||
+    highlight?.country ||
+    highlight?.continent ||
+    highlight?.pin ||
+    highlight?.cell,
   );
 }
 
@@ -80,10 +104,21 @@ export function matchHighlight(
   if (!hasHighlight(highlight)) return true;
   if (highlight?.cell && dot.id === highlight.cell) return true;
   if (highlight?.group && dot.groups.includes(highlight.group)) return true;
-  if (highlight?.country && dot.country?.toUpperCase() === highlight.country.toUpperCase()) return true;
+  if (highlight?.groups?.some((group) => dot.groups.includes(group)))
+    return true;
+  if (
+    highlight?.country &&
+    dot.country?.toUpperCase() === highlight.country.toUpperCase()
+  )
+    return true;
   if (highlight?.continent) {
     const wanted = normalizeContinent(highlight.continent);
-    if (wanted && continentKeys(dot.continent).some((key) => normalizeContinent(key) === wanted)) {
+    if (
+      wanted &&
+      continentKeys(dot.continent).some(
+        (key) => normalizeContinent(key) === wanted,
+      )
+    ) {
       return true;
     }
   }
@@ -95,14 +130,25 @@ export function highlightFromHover(
   mode: HoverMode,
   dot: Dot,
   pin?: PlacedPin,
+  pins?: PlacedPin[],
 ): MapHighlight | null {
   if (mode === "none") return null;
   if (mode === "dot") return { cell: dot.id };
   if (mode === "country") return { cell: dot.id, country: dot.country ?? null };
   if (mode === "group") {
+    if (!pin && pins && pins.length > 1)
+      return {
+        cell: dot.id,
+        groups: [
+          ...new Set(pins.flatMap((item) => (item.group ? [item.group] : []))),
+        ],
+      };
     return { cell: dot.id, group: pin?.group ?? dot.groups.at(-1) ?? null };
   }
-  return { cell: dot.id, continent: normalizeContinent(dot.continent) ?? dot.continent ?? null };
+  return {
+    cell: dot.id,
+    continent: normalizeContinent(dot.continent) ?? dot.continent ?? null,
+  };
 }
 
 export function hoverRelatesSiblings(mode: HoverMode): boolean {

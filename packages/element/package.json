@@ -16,5 +16,6 @@
     "@dotmap/core": "0.1.0",
     "@dotmap/theme": "0.1.0",
     "@dotmap/world": "0.1.0"
-  }
+  },
+  "private": true
 }

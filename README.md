@@ -2,22 +2,40 @@
 
 A headless TypeScript engine for **dotted / matrix world maps**. It turns GeoJSON into a grid of coordinates you can render in React, SVG, Canvas, or anything else.
 
-Existing libraries mostly return a baked SVG string. DotMap returns data: dots, snapped pins, collision-aware labels, and legend metadata.
+DotMap returns a structured snapshot: country-aware dots, snapped pins, collision-aware labels, and legend metadata. Use its React component, custom element, or your own renderer.
+
+## Install the development release
+
+The public package is ready to pack but is not yet published. `@dotmap/toolkit` is a provisional identifier; confirm ownership of the final npm scope before publication.
+
+```sh
+git clone https://github.com/pvj7000/map-dots.git
+cd map-dots
+npm ci
+npm run pack:toolkit
+# In your own website project, install the generated tarball:
+npm install /path/to/map-dots/dotmap-toolkit-0.1.0-beta.1.tgz
+```
+
+There is one installation with separate imports for core, React, custom elements, themes, and world data. React is an optional peer dependency; engine and plain HTML consumers do not install React.
+
+Successful **Checks** workflow runs also provide a packed beta in their `dotmap-beta-<commit>` artifact. Download and extract it, then install the `.tgz` in your project. For plain HTML, the hosted customizer's HTML export includes the browser bundle URL and needs no npm installation. See the [release instructions](docs/releasing.md) and [developer trial guide](docs/beta-testing.md).
 
 ## Recommended stack
 
 | Layer | Package | Why |
 | --- | --- | --- |
-| Engine | `@dotmap/core` | Headless. `createMap` once, `compute()` is cheap. Framework-agnostic. |
-| Display tokens | `@dotmap/theme` | One CSS file. Every look — color, size, hover — is a `--dotmap-*` variable. |
-| Any website | `@dotmap/element` | `<dot-map>` custom element. No React required. |
-| React / Next | `@dotmap/react` | Thin wrapper over the same tokens and hover API. |
-| Data | `@dotmap/world` | Compact Natural Earth 110m countries. Swap your own GeoJSON anytime. |
+| Engine | `@dotmap/toolkit/core` | Headless. `createMap` once, `compute()` is cheap. Framework-agnostic. |
+| Display tokens | `@dotmap/toolkit/theme` | One CSS file. Every look — color, size, hover — is a `--dotmap-*` variable. |
+| Any website | `@dotmap/toolkit/element` | `<dot-map>` custom element. No React required. |
+| React / Next | `@dotmap/toolkit/react` | Thin wrapper over the same tokens and hover API. |
+| Data | `@dotmap/toolkit/world` | Compact Natural Earth 110m countries. Swap your own GeoJSON anytime. |
 
 Do not bake colors into the engine. Sites override the map by setting CSS variables on the host, a parent, or via the `theme` prop.
 
 ```html
-<script type="module" src="./node_modules/@dotmap/element/src/index.ts"></script>
+<!-- Copy node_modules/@dotmap/toolkit/dist/browser.js to your site assets. -->
+<script defer src="./assets/dotmap.js"></script>
 <dot-map
   grid="diagonal"
   projection="robinson"
@@ -37,26 +55,29 @@ dot-map,
 ```
 
 ```tsx
-import { DotMap } from '@dotmap/react';
+import { DotMap } from '@dotmap/toolkit/react';
+import '@dotmap/toolkit/styles.css';
 
 <DotMap snapshot={snapshot} theme="midnight" hoverMode="group" />
 ```
 
-## Packages
+## Public entry points
 
-- `@dotmap/core` — projections, grid topologies, pin snapping, labels, legend, optional SVG string
-- `@dotmap/theme` — CSS variables, presets (`paper`, `ink`, `midnight`), hover styles
-- `@dotmap/element` — drop-in `<dot-map>` web component
-- `@dotmap/react` — `<DotMap>`, `<Legend>`, `useDotMap`
-- `@dotmap/world` — Natural Earth 110m countries
-- `@dotmap/playground` — interactive demo (`/` React, `/element.html` web component)
+- `@dotmap/toolkit/core` (also the package root) — engine, groups, labels, serialization, preset validation, optional SVG output
+- `@dotmap/toolkit/react` — `<DotMap>`, `<Legend>`, `useDotMap`; import `@dotmap/toolkit/styles.css` once
+- `@dotmap/toolkit/element` — registers `<dot-map>` in a bundled browser project; styles are included
+- `@dotmap/toolkit/theme` — CSS variables and theme helpers
+- `@dotmap/toolkit/world` — optional Natural Earth world data
+- `@dotmap/toolkit/browser.js` — standalone browser bundle with world data and styles; no bundler required
+
+The original core, React, element, theme, and world workspaces are private implementation packages. `packages/toolkit` builds the public distribution with compiled ESM, bundled public declarations, styles, and license notices. The core entry does not import React, register elements, or include the world dataset.
 
 ## The API we wanted
 
 ```ts
-import { createMap } from '@dotmap/core';
-import { DotMap, Legend } from '@dotmap/react';
-import world from '@dotmap/world';
+import { createMap } from '@dotmap/toolkit/core';
+import { DotMap, Legend } from '@dotmap/toolkit/react';
+import world from '@dotmap/toolkit/world';
 
 const map = createMap({
   geojson: world,
@@ -140,7 +161,7 @@ Hover or lock a legend item with the React highlight API:
 
 ## Display variables
 
-Import `@dotmap/theme/dotmap.css` (or use `<dot-map>`, which ships the same sheet). Override any of these on `:root`, `.dotmap`, or the host element.
+Import `@dotmap/toolkit/styles.css` (or use `<dot-map>`, which ships the same sheet). Override any of these on `:root`, `.dotmap`, or the host element.
 
 | Variable | Controls | Default (`paper`) |
 | --- | --- | --- |
@@ -172,18 +193,24 @@ Import `@dotmap/theme/dotmap.css` (or use `<dot-map>`, which ships the same shee
 Presets set the same tokens in JS:
 
 ```ts
-import { applyTheme, themeToCssVars } from '@dotmap/theme';
+import { applyTheme, themeToCssVars } from '@dotmap/toolkit/theme';
 
 applyTheme(element, 'midnight');
 applyTheme(element, { land: '#0f766e', hoverScale: '2' });
 ```
+
+## Locations sharing a grid cell
+
+Nearby locations can snap to the same dot. All pins and labels remain in the snapshot. React, the custom element, and SVG output show a segmented marker with a location count rather than choosing one pin's color. Each interactive segment has a title, accessible name, and keyboard focus. Hover callbacks expose the selected pin and the full `pins` array for that cell; hovering the shared cell in group mode highlights all of its location groups.
+
+For full preset control, a custom element accepts `map.options` (geometry) and `map.labels` (label layout), alongside its existing pins, groups, and theme properties.
 
 ## Continent view
 
 Crop and fit the map to one continent. Siberia is kept in Asia (Russia is Europe in Natural Earth, so it is added explicitly). Europe is framed to continental Europe so Siberia does not dominate.
 
 ```ts
-import { continentView, createMap } from '@dotmap/core';
+import { continentView, createMap } from '@dotmap/toolkit/core';
 
 const map = createMap({
   geojson: world,
@@ -202,9 +229,21 @@ Pins outside that frame are dropped automatically. You can still pass `countries
 | `diagonal` | Staggered rows (the usual corporate dotted map) |
 | `hex` | Same stagger with true hex vertical spacing |
 
-## Playground builder
+## Product page & map customizer
 
-The playground is also a no-code configuration builder. Its **Locations** panel lets you:
+Run `npm install` and `npm run dev`, then open `http://localhost:5173`. The product page explains where DotMap fits, shows integration examples, and includes a live map customizer.
+
+Start with **Global presence**, **A colorful world**, or **A clean canvas**, then use the three builder steps:
+
+1. **Design** — choose a theme, background and land colors, projection, world/continent view, grid, spacing, dot radius, hover behavior, and group colors.
+2. **Locations** — search for places or enter coordinates, edit pins and label anchors, and preview changes on the map.
+3. **Export** — copy or download a React component, a standalone custom-element HTML page, or a portable JSON preset. Exports include the same geometry, label settings, and colors used by the preview.
+
+Use **Import JSON preset** to reopen an exported map. Committed settings are automatically saved in this browser; unsaved location previews are excluded. Import validates the preset version, coordinates, map resolution, and display settings before replacing the current map. Invalid files leave your work intact.
+
+HTML exports load the standalone bundle from the customizer URL. For independent hosting, copy `browser.js` to your own assets and change the generated script URL. React exports consume the compiled toolkit and explicitly import its CSS. Public npm publication remains a separate release step.
+
+The **Locations** panel lets you:
 
 - search a city or address (OpenStreetMap via Photon) and fill its coordinates
 - enter latitude and longitude manually when search is not enough
@@ -213,7 +252,23 @@ The playground is also a no-code configuration builder. Its **Locations** panel 
 - select a location to isolate it on the map
 - copy or download the result as JSON, React, or custom-element HTML
 
-Run `npm run dev`, then open `http://localhost:5173`.
+JSON presets contain `map`, `content`, and `display` objects that map directly to the package APIs:
+
+```tsx
+import { createMap, type ComputeInput, type MapOptions } from '@dotmap/toolkit/core';
+import { DotMap } from '@dotmap/toolkit/react';
+import world from '@dotmap/toolkit/world';
+import preset from './dotmap-preset.json';
+
+const map = createMap({ geojson: world, ...preset.map as Omit<MapOptions, 'geojson'> });
+const snapshot = map.compute(preset.content as ComputeInput);
+
+// JSON imports widen string unions, so narrow the hover mode for TypeScript.
+<DotMap snapshot={snapshot} theme={preset.display.theme}
+  hoverMode={preset.display.hoverMode as 'none' | 'dot' | 'country' | 'group' | 'continent'} />;
+```
+
+For a typed component without these JSON casts, use the **React** export instead.
 
 ## What V1 does not do
 
@@ -223,9 +278,15 @@ No deep zoom, no pan, no street-level tiles. This is a country / continent visua
 
 ```bash
 npm install
+npm run build          # build the distribution and product page
 npm test
+npm run build:pages    # build under /map-dots/
+npm run verify:package # fresh core-only + React/Vite consumers
+npm run test:browser   # Playwright; run build:pages and install Chromium first
 npm run matrix          # ASCII 1/0 world
 npm run dev             # playground at http://localhost:5173
 ```
 
-World data is Natural Earth 110m, compacted to ISO code, name, and continent.
+World data is Natural Earth 110m, compacted to ISO code, name, and continent. It is public-domain data; attribution and bundled dependency licenses ship in the package.
+
+See [the work packages](docs/implementation-plan.md) and [release/deployment steps](docs/releasing.md).

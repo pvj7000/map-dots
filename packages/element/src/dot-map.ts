@@ -15,7 +15,12 @@ import {
   type ProjectionName,
 } from "@dotmap/core";
 import type { FeatureCollection } from "geojson";
-import { applyTheme, type DotMapTheme, type ThemePreset } from "@dotmap/theme";
+import {
+  applyTheme,
+  resolveTheme,
+  type DotMapTheme,
+  type ThemePreset,
+} from "@dotmap/theme";
 import world from "@dotmap/world";
 import { fallbackStyle, themeSheet } from "./css.js";
 import { lookupDot, renderMapSvg } from "./render.js";
@@ -68,7 +73,15 @@ export class DotMapElement extends HTMLElement {
   #countryGroups: Record<string, string | string[]> = {};
   #continentGroups: Record<string, string | string[]> = {};
   #theme: DotMapTheme | ThemePreset = "paper";
+  #mapOptions: Omit<MapOptions, "geojson"> = {};
+  #labels: ComputeInput["labels"] = {
+    connector: "elbow",
+    fontSize: 12,
+    gap: 20,
+  };
   #frame: number | null = null;
+  #pendingRebuild = false;
+  #painting = false;
 
   constructor() {
     super();
@@ -82,6 +95,21 @@ export class DotMapElement extends HTMLElement {
 
   get pins(): PinInput[] {
     return this.#pins;
+  }
+
+  get options(): Omit<MapOptions, "geojson"> {
+    return this.#mapOptions;
+  }
+  set options(value: Omit<MapOptions, "geojson">) {
+    this.#mapOptions = value;
+    this.#schedule("rebuild");
+  }
+  get labels(): ComputeInput["labels"] {
+    return this.#labels;
+  }
+  set labels(value: ComputeInput["labels"]) {
+    this.#labels = value;
+    this.#schedule("compute");
   }
   set pins(value: PinInput[]) {
     this.#pins = value;
@@ -142,24 +170,44 @@ export class DotMapElement extends HTMLElement {
     this.#rebuild();
     this.shadowRoot?.addEventListener("pointerover", this.#onOver);
     this.shadowRoot?.addEventListener("pointerleave", this.#onLeave);
+    this.shadowRoot?.addEventListener("focusin", this.#onOver);
+    this.shadowRoot?.addEventListener("focusout", this.#onLeave);
   }
 
   disconnectedCallback(): void {
+    if (this.#frame) cancelAnimationFrame(this.#frame);
+    this.#frame = null;
     this.shadowRoot?.removeEventListener("pointerover", this.#onOver);
     this.shadowRoot?.removeEventListener("pointerleave", this.#onLeave);
+    this.shadowRoot?.removeEventListener("focusin", this.#onOver);
+    this.shadowRoot?.removeEventListener("focusout", this.#onLeave);
   }
 
-  attributeChangedCallback(): void {
-    if (!this.isConnected) return;
+  attributeChangedCallback(
+    _name: string,
+    previous: string | null,
+    next: string | null,
+  ): void {
+    if (!this.isConnected || previous === next) return;
     this.#schedule("rebuild");
   }
 
   #onOver = (event: Event) => {
+    if (this.#painting) return;
     const target = (event.target as Element | null)?.closest?.("[data-id]");
     if (!target || !this.#snapshot) return;
-    const found = lookupDot(this.#snapshot, target.getAttribute("data-id") ?? "");
+    const found = lookupDot(
+      this.#snapshot,
+      target.getAttribute("data-id") ?? "",
+      target.getAttribute("data-pin"),
+    );
     if (!found) return;
-    this.#hover = highlightFromHover(this.hoverMode, found.dot, found.pin);
+    this.#hover = highlightFromHover(
+      this.hoverMode,
+      found.dot,
+      found.pin,
+      found.pins,
+    );
     this.dispatchEvent(
       new CustomEvent("dotmap-hover", {
         detail: { ...found, highlight: this.#hover },
@@ -170,16 +218,22 @@ export class DotMapElement extends HTMLElement {
   };
 
   #onLeave = () => {
+    if (this.#painting) return;
     this.#hover = null;
-    this.dispatchEvent(new CustomEvent("dotmap-hover", { detail: null, bubbles: true }));
+    this.dispatchEvent(
+      new CustomEvent("dotmap-hover", { detail: null, bubbles: true }),
+    );
     this.#paint();
   };
 
   #schedule(kind: "rebuild" | "compute"): void {
+    if (kind === "rebuild") this.#pendingRebuild = true;
     if (this.#frame) cancelAnimationFrame(this.#frame);
     this.#frame = requestAnimationFrame(() => {
       this.#frame = null;
-      if (kind === "rebuild") this.#rebuild();
+      const rebuild = this.#pendingRebuild;
+      this.#pendingRebuild = false;
+      if (rebuild) this.#rebuild();
       else this.#compute();
     });
   }
@@ -190,7 +244,9 @@ export class DotMapElement extends HTMLElement {
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean);
-    const view = CONTINENT_SCOPES.has(scope) ? continentView(scope as ContinentId) : {};
+    const view = CONTINENT_SCOPES.has(scope)
+      ? continentView(scope as ContinentId)
+      : {};
     return {
       geojson: this.#geojson,
       width: Number(this.getAttribute("width") ?? 1100),
@@ -198,23 +254,29 @@ export class DotMapElement extends HTMLElement {
       spacing: Number(this.getAttribute("spacing") ?? 8),
       padding: Number(this.getAttribute("padding") ?? 28),
       grid: (this.getAttribute("grid") ?? "diagonal") as GridTopology,
-      projection: (this.getAttribute("projection") ?? "robinson") as ProjectionName,
+      projection: (this.getAttribute("projection") ??
+        "robinson") as ProjectionName,
       countries: countries.length ? countries : undefined,
       ...view,
+      ...this.#mapOptions,
     };
   }
 
   #input(): ComputeInput {
     return {
-      pins: this.#pins.length ? this.#pins : parseJson(this.getAttribute("pins"), []),
-      groups: this.#groups.length ? this.#groups : parseJson(this.getAttribute("groups"), []),
+      pins: this.#pins.length
+        ? this.#pins
+        : parseJson(this.getAttribute("pins"), []),
+      groups: this.#groups.length
+        ? this.#groups
+        : parseJson(this.getAttribute("groups"), []),
       countryGroups: Object.keys(this.#countryGroups).length
         ? this.#countryGroups
         : parseJson(this.getAttribute("country-groups"), {}),
       continentGroups: Object.keys(this.#continentGroups).length
         ? this.#continentGroups
         : parseJson(this.getAttribute("continent-groups"), {}),
-      labels: { connector: "elbow", fontSize: 12, gap: 20 },
+      labels: this.#labels,
     };
   }
 
@@ -240,18 +302,29 @@ export class DotMapElement extends HTMLElement {
 
   #paint(): void {
     if (!this.shadowRoot || !this.#snapshot) return;
+    const focused = this.shadowRoot.activeElement?.getAttribute("data-pin");
+    this.#painting = true;
     const existing = this.shadowRoot.querySelector("style");
     this.shadowRoot.innerHTML = renderMapSvg({
       snapshot: this.#snapshot,
-      shape: (this.getAttribute("shape") ?? "circle") as "circle" | "square" | "hexagon",
+      shape: (this.getAttribute("shape") ?? "circle") as
+        "circle" | "square" | "hexagon",
       highlight: this.#highlight,
       hover: this.#hover,
       hoverMode: this.hoverMode,
       showOcean: this.hasAttribute("show-ocean"),
       style: "",
+      theme: resolveTheme(this.#theme),
     });
     if (existing) this.shadowRoot.prepend(existing);
     this.#applyLook();
+    if (focused) {
+      const marker = Array.from(
+        this.shadowRoot.querySelectorAll<SVGElement>(".dotmap__pin-hit"),
+      ).find((node) => node.getAttribute("data-pin") === focused);
+      (marker as (SVGElement & { focus(): void }) | undefined)?.focus();
+    }
+    this.#painting = false;
   }
 }
 

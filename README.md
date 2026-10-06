@@ -1,6 +1,12 @@
 # DotMap
 
-A headless TypeScript engine for **dotted / matrix world maps**. It turns GeoJSON into a grid of coordinates you can render in React, SVG, Canvas, or anything else.
+Open-source dotted maps for your website. Design a map visually and export it for React or plain HTML, or use the headless TypeScript engine with your own renderer.
+
+**[Open the map configurator](https://pvj7000.github.io/map-dots/#customize)**
+
+[![Example dotted world map with highlighted countries and labeled locations in New York, Vienna, Singapore, and Cape Town](docs/images/example-map.svg)](https://pvj7000.github.io/map-dots/#customize)
+
+Choose your colors and projection, add locations, and preview the result before exporting your map. No account or map API key required. MIT licensed.
 
 DotMap returns a structured snapshot: country-aware dots, snapped pins, collision-aware labels, and legend metadata. Use its React component, custom element, or your own renderer.
 
@@ -231,7 +237,9 @@ Pins outside that frame are dropped automatically. You can still pass `countries
 
 ## Product page & map customizer
 
-Run `npm install` and `npm run dev`, then open `http://localhost:5173`. The product page explains where DotMap fits, shows integration examples, and includes a live map customizer.
+Use the **[hosted map configurator](https://pvj7000.github.io/map-dots/#customize)** to create and preview your map without installing anything. The [product page](https://pvj7000.github.io/map-dots/) includes integration examples and setup instructions.
+
+For local development, run `npm ci` and `npm run dev`, then open `http://localhost:5173`.
 
 Start with **Global presence**, **A colorful world**, or **A clean canvas**, then use the three builder steps:
 

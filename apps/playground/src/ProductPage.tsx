@@ -1,7 +1,7 @@
 import { createMap } from "@dotmap/core";
 import { DotMap } from "@dotmap/react";
 import world from "@dotmap/world";
-import { useMemo, useState, type ReactNode } from "react";
+import { memo, useMemo, useState, type ReactNode } from "react";
 
 const REPOSITORY = "https://github.com/pvj7000/map-dots";
 const examples = {
@@ -47,19 +47,35 @@ const snapshot = map.compute({
 // Need an SVG string? Use renderSVG(snapshot) from @dotmap/toolkit/core.`,
 };
 
-export function ProductPage({ children }: { children: ReactNode }) {
-  const [integration, setIntegration] =
-    useState<keyof typeof examples>("react");
-  const [copyStatus, setCopyStatus] = useState("");
-  const hero = useMemo(
+function ArrowIcon({ external = false }: { external?: boolean }) {
+  return (
+    <svg
+      className="arrow-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={external ? "M7 17 17 7M7 7h10v10" : "M5 12h14m-6-6 6 6-6 6"} />
+    </svg>
+  );
+}
+
+const HeroMap = memo(function HeroMap() {
+  const snapshot = useMemo(
     () =>
       createMap({
         geojson: world,
         width: 1000,
-        height: 560,
-        padding: 34,
-        spacing: 10,
-        projection: "robinson",
+        height: 580,
+        padding: 18,
+        spacing: 4.5,
+        grid: "hex",
+        projection: "naturalEarth",
       }).compute({
         groups: [{ id: "offices", label: "Our offices", color: "#28765e" }],
         countryGroups: {
@@ -98,10 +114,29 @@ export function ProductPage({ children }: { children: ReactNode }) {
             preferredAnchor: "right",
           },
         ],
-        labels: { fontSize: 15, gap: 18, connector: "elbow" },
+        labels: { enabled: false },
       }),
     [],
   );
+
+  return (
+    <DotMap
+      snapshot={snapshot}
+      hoverMode="country"
+      theme={{
+        land: "#9cae9f",
+        bg: "transparent",
+        dotSize: "1.2",
+        pinSize: "4",
+      }}
+    />
+  );
+});
+
+export function ProductPage({ children }: { children: ReactNode }) {
+  const [integration, setIntegration] =
+    useState<keyof typeof examples>("react");
+  const [copyStatus, setCopyStatus] = useState("");
 
   const copyExample = async () => {
     try {
@@ -135,66 +170,45 @@ export function ProductPage({ children }: { children: ReactNode }) {
           target="_blank"
           rel="noreferrer"
         >
-          GitHub <span aria-hidden="true">↗︎</span>
+          GitHub <ArrowIcon external />
         </a>
       </header>
 
       <main>
         <section className="hero page-width" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow">
-              <span className="status-dot" /> Open source. Made for the web.
-            </p>
+            <a
+              className="hero-license"
+              href={`${REPOSITORY}/blob/main/LICENSE`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open source · MIT licensed
+            </a>
             <h1 id="hero-title">
-              A world of dots.
-              <br />A map that’s <em>yours.</em>
+              Dotted maps
+              <br />
+              <em>for your website.</em>
             </h1>
             <p className="hero-description">
-              Beautiful dotted maps for your next website. Show your offices,
-              community, or global reach with a small TypeScript toolkit that
-              fits your design.
+              Design your map visually. Export it for React or HTML.
             </p>
             <div className="hero-actions">
               <a className="btn" href="#customize">
-                Create your map <span aria-hidden="true">→</span>
+                Create your map <ArrowIcon />
               </a>
-              <a className="btn btn--ghost" href="#get-started">
-                Explore the code <span aria-hidden="true">↗︎</span>
+              <a
+                className="btn btn--ghost"
+                href={REPOSITORY}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Explore the code <ArrowIcon external />
               </a>
             </div>
-            <p className="hero-note">
-              No map API key. No account. MIT licensed.
-            </p>
           </div>
           <div className="hero-visual">
-            <div className="hero-visual__header">
-              <span>
-                <span className="status-dot" /> A little perspective
-              </span>
-              <code>your-world.tsx</code>
-            </div>
-            <DotMap
-              snapshot={hero}
-              hoverMode="country"
-              theme={{
-                land: "#c7c9bf",
-                bg: "transparent",
-                labelColor: "#315a48",
-                labelHalo: "#f6f5ef",
-                labelSize: "15px",
-                dotSize: "2.4",
-                pinSize: "5",
-              }}
-            />
-            <div className="hero-visual__footer">
-              <span>
-                <i /> Our offices, connected.
-              </span>
-              <span>4 locations · one world</span>
-            </div>
-            <div className="hero-code-label">
-              <span aria-hidden="true">&lt;/&gt;</span> Your data. Your design.
-            </div>
+            <HeroMap />
           </div>
         </section>
 
@@ -202,14 +216,10 @@ export function ProductPage({ children }: { children: ReactNode }) {
           className="compatibility page-width"
           aria-label="Supported integrations"
         >
-          <span>One toolkit. Your stack.</span>
           <strong>React</strong>
           <strong>Web components</strong>
           <strong>TypeScript</strong>
           <strong>SVG + Canvas</strong>
-          <span className="compatibility-license">
-            Free to build with <span aria-hidden="true">↗︎</span>
-          </span>
         </div>
 
         <section
@@ -327,7 +337,7 @@ export function ProductPage({ children }: { children: ReactNode }) {
               target="_blank"
               rel="noreferrer"
             >
-              Read the full documentation <span aria-hidden="true">↗︎</span>
+              Read the full documentation <ArrowIcon external />
             </a>
           </div>
           <div className="setup-code">
@@ -405,7 +415,7 @@ export function ProductPage({ children }: { children: ReactNode }) {
             target="_blank"
             rel="noreferrer"
           >
-            Explore on GitHub <span aria-hidden="true">↗︎</span>
+            Explore on GitHub <ArrowIcon external />
           </a>
         </section>
       </main>

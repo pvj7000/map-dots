@@ -130,6 +130,12 @@ button {
   margin-top: 22px;
   justify-content: space-between;
 }
+.arrow-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
 .inline-link {
   display: inline-flex;
   align-items: center;
@@ -201,7 +207,7 @@ button {
 .github-link {
   display: flex;
   align-items: center;
-  gap: 19px;
+  gap: 12px;
   border: 1px solid #d4d9cd;
   border-radius: 7px;
   padding: 9px 13px;
@@ -213,16 +219,27 @@ button {
 }
 .hero {
   display: grid;
-  grid-template-columns: 1fr 1.12fr;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
   align-items: center;
-  gap: 32px;
-  padding: 87px 0 73px;
+  gap: 48px;
+  padding: 100px 0;
+}
+.hero-license {
+  display: inline-block;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.hero-license:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .hero h1 {
-  font-size: clamp(36px, 4.4vw, 64px);
-  letter-spacing: -0.065em;
-  line-height: 1.1;
-  margin-top: 22px;
+  font-size: clamp(40px, 4.3vw, 60px);
+  letter-spacing: -0.06em;
+  line-height: 1.08;
+  margin-top: 20px;
   font-weight: 600;
 }
 .hero h1 em {
@@ -230,112 +247,46 @@ button {
   color: var(--accent);
 }
 .hero-description {
-  font-size: 14px;
-  line-height: 1.9;
-  max-width: 410px;
+  font-size: 17px;
+  line-height: 1.65;
+  max-width: 360px;
   color: var(--muted);
-  margin-top: 26px;
+  margin-top: 24px;
 }
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 30px;
+  gap: 14px;
+  margin-top: 32px;
 }
-.hero-note {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 19px;
+.hero-actions .btn {
+  font-size: 14px;
+  padding: 15px 18px;
+  gap: 18px;
 }
 .hero-visual {
-  position: relative;
   min-width: 0;
-  padding-top: 30px;
-}
-.hero-visual__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-.hero-visual__header > span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.hero-visual__header code {
-  font-size: 10px;
-  text-transform: none;
-  letter-spacing: 0;
-  color: #969d92;
 }
 .hero-visual svg {
-  margin: 18px 0;
+  display: block;
+  width: 100%;
+  height: auto;
 }
-.hero-visual__footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 9px;
-  padding: 0 16px;
-  color: var(--muted);
-}
-.hero-visual__footer > span:first-child {
-  color: var(--accent);
-}
-.hero-visual__footer i {
-  display: inline-block;
-  background: var(--accent);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin-right: 6px;
-}
-.hero-code-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  position: absolute;
-  right: 24px;
-  bottom: -43px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 10px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 10px 12px;
-  transform: rotate(-3deg);
-  box-shadow: 0 5px 10px #24372c05;
-}
-.hero-code-label span {
-  color: var(--accent);
+.hero-visual .dotmap__dot {
+  animation: none;
 }
 .compatibility {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 25px;
+  justify-content: center;
+  gap: 64px;
   padding: 26px 0;
   border-block: 1px solid var(--line);
-}
-.compatibility > span {
-  color: var(--muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 10px;
 }
 .compatibility strong {
   font-size: 13px;
   font-weight: 600;
   color: #63705f;
-}
-.compatibility-license span {
-  color: var(--accent);
 }
 .why-section {
   padding: 83px 0 85px;
@@ -1408,18 +1359,13 @@ input[type="color"] {
   padding: 12px;
   background: #f5f7ef;
 }
-@media (min-width: 1500px) {
-  .hero h1 {
-    font-size: 66px;
-  }
-}
 @media (max-width: 1100px) {
   .page-width {
     width: calc(100% - 56px);
   }
   .hero {
-    gap: 22px;
-    padding-top: 65px;
+    gap: 28px;
+    padding: 80px 0;
   }
   .hero h1 {
     font-size: 46px;
@@ -1428,9 +1374,9 @@ input[type="color"] {
     gap: 8px;
   }
   .hero-actions .btn {
-    font-size: 11px;
-    padding: 12px;
-    gap: 14px;
+    font-size: 13px;
+    padding: 13px 15px;
+    gap: 12px;
   }
   .builder-layout {
     grid-template-columns: minmax(0, 1fr) 340px;
@@ -1452,7 +1398,8 @@ input[type="color"] {
 @media (max-width: 850px) {
   .hero {
     grid-template-columns: 1fr;
-    padding: 58px 0 70px;
+    gap: 40px;
+    padding: 64px 0;
   }
   .hero h1 {
     font-size: 54px;
@@ -1461,20 +1408,14 @@ input[type="color"] {
     max-width: 480px;
   }
   .hero-visual {
-    max-width: 600px;
+    max-width: 680px;
     width: 100%;
-    margin: 15px auto 0;
-  }
-  .hero-visual svg {
-    margin-top: 0;
+    margin: 0 auto;
   }
   .compatibility {
     flex-wrap: wrap;
     justify-content: center;
     gap: 18px 30px;
-  }
-  .compatibility-license {
-    display: none;
   }
   .builder-layout {
     grid-template-columns: 1fr;
@@ -1552,32 +1493,17 @@ input[type="color"] {
     padding: 7px 9px;
   }
   .hero {
-    padding-top: 45px;
+    gap: 32px;
+    padding: 48px 0;
   }
   .hero h1 {
-    font-size: clamp(34px, 8.8vw, 51px);
+    font-size: clamp(36px, 9.8vw, 51px);
   }
   .hero-description {
-    font-size: 13px;
-  }
-  .hero-visual__header code {
-    display: none;
-  }
-  .hero-visual__footer {
-    font-size: 8px;
-    padding: 0 5px;
-  }
-  .hero-code-label {
-    font-size: 8px;
-    right: 5px;
-    bottom: -38px;
+    font-size: 16px;
   }
   .compatibility {
     gap: 16px 22px;
-  }
-  .compatibility > span:first-child {
-    width: 100%;
-    text-align: center;
   }
   .compatibility strong {
     font-size: 10px;
@@ -1714,4 +1640,9 @@ input[type="color"] {
   gap: 12px;
   margin-bottom: 20px;
 }
-.preset-actions p { flex: 1 1 240px; margin: 0; font-size: 13px; color: var(--muted, #626b61); }
+.preset-actions p {
+  flex: 1 1 240px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted, #626b61);
+}

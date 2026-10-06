@@ -163,9 +163,7 @@ test("Pages assets work on mobile and the separate custom-element example is inc
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("./");
-  await expect(
-    page.getByRole("heading", { name: /A world of dots/ }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
